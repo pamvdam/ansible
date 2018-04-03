@@ -1,0 +1,32 @@
+---
+- hosts: all
+  tasks:
+    - name: Add github ssh key
+      copy: >
+        src=config/id_git_rsa
+        dest=/home/pascal/.ssh/id_git_rsa
+        owner=pascal
+        group=pascal
+        mode=0600
+  
+    - name: Configure ssh to use ansible key for deploy
+      template: >
+        src=templates/ssh_config.j2
+        dest=/home/pascal/.ssh/config
+        owner=pascal
+        group=pascal
+        mode=0644
+
+    - name: Install dependencies
+      become: yes
+      yum: name={{ item }} state=present
+      with_items:
+        - htop
+        - git-all
+        - python-devel
+      
+    - name: clone a private repository
+      git: >
+        repo=ssh://git@github.com:pamvdam/ansible.git
+        key_file=/home/pascal/.ssh/id_git_rsa
+        dest=/tmp/out
